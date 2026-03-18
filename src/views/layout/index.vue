@@ -21,7 +21,42 @@
       <el-container>
         <!-- 左侧菜单 -->
         <el-aside width="200px" class="aside">
-          左侧菜单栏
+              <el-menu
+                default-active="2"
+                class="el-menu-vertical-demo"
+                @open="handleOpen"
+                @close="handleClose"
+              >
+                <el-menu-item index="0">
+                  <el-icon><Promotion /></el-icon>
+                  <span>首页</span>
+                </el-menu-item>
+                <el-sub-menu index="1">
+                  <template #title>
+                    <el-icon><Menu /></el-icon>
+                    <span>班级学员管理</span>
+                  </template>
+                    <el-menu-item index="1-1" class="el-menu-vertical-demo"><el-icon><HomeFilled /></el-icon>班级管理</el-menu-item>
+                    <el-menu-item index="1-2" class="el-menu-vertical-demo"><el-icon><UserFilled /></el-icon>学员管理</el-menu-item>
+                </el-sub-menu>
+                <el-sub-menu index="2">
+                  <template #title>
+                    <el-icon><Tools /></el-icon>
+                    <span>系统信息管理</span>
+                  </template>
+                    <el-menu-item index="2-1" class="el-menu-vertical-demo"><el-icon><HelpFilled /></el-icon>部门管理</el-menu-item>
+                    <el-menu-item index="2-2" class="el-menu-vertical-demo"><el-icon><Avatar /></el-icon>员工管理</el-menu-item>
+                </el-sub-menu>
+                <el-sub-menu index="3">
+                  <template #title>
+                    <el-icon><Histogram /></el-icon>
+                    <span>数据统计管理</span>
+                  </template>
+                    <el-menu-item index="3-1" class="el-menu-vertical-demo"><el-icon><InfoFilled /></el-icon>员工信息统计</el-menu-item>
+                    <el-menu-item index="3-2" class="el-menu-vertical-demo"><el-icon><Share /></el-icon>学员信息统计</el-menu-item>
+                    <el-menu-item index="3-3" class="el-menu-vertical-demo"><el-icon><Edit /></el-icon>日志信息统计</el-menu-item>
+                </el-sub-menu>
+              </el-menu>
         </el-aside>
         
         <el-main>
@@ -70,5 +105,9 @@ a {
   width: 220px;
   border-right: 1px solid #ccc;
   height: 730px;
+}
+
+.el-menu-vertical-demo{
+  background-color: #efffea;
 }
 </style>
