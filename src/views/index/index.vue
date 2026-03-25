@@ -7,5 +7,8 @@
 </template>
 
 <style scoped>
-
+  img {
+    width: 100%;
+    height: 80%;
+  }
 </style>
