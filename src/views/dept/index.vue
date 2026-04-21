@@ -1,8 +1,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
-import { getDeptListApi, addDeptApi } from '@/api/dept'
-import { ElMessage } from 'element-plus';
+import { getDeptListApi, addDeptApi, getDeptByIdApi, updateDeptApi, deleteDeptApi } from '@/api/dept'
+import { ElMessage, ElMessageBox } from 'element-plus';
 // //测试数据
 //   const tableData = [
 //   {
@@ -29,11 +29,34 @@ import { ElMessage } from 'element-plus';
 
 //列表数据
 const tableData = ref([])
-function handleEdit(index, row) {
-  console.log(index, row);
+
+//修改部门相关
+async function handleEdit(index, row) {
+  console.log(index, row)
+  showDialog.value = true
+  formTitle.value = '修改部门'
+  const res = await getDeptByIdApi(row.id)
+  deptForm.value = res.data
 }
-function handleDelete(index, row) {
-  console.log(index, row);
+
+async function handleDelete(index, row) {
+  console.log(index, row)
+  await ElMessageBox.confirm(
+    `确定要删除${row.name}吗？`,
+    '提醒',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  )
+  const res = await deleteDeptApi(row.id)
+  if(res.code === 1) {
+    ElMessage.success('删除部门成功')
+    getDept()
+  } else {
+    ElMessage.error('删除部门失败')
+  }
 }
 
 //新增部门相关
@@ -65,15 +88,20 @@ const saveDept = async () => {
     // 校验失败，直接返回，不执行后续提交逻辑
     return 
   }
-  const res = await addDeptApi(deptForm.value)
+  let res = null
+  if (deptForm.value.id) {
+    res = await updateDeptApi(deptForm.value)
+  } else {
+    res = await addDeptApi(deptForm.value)
+  }
   console.log(res);
   if(res && res.code === 1) {
-    ElMessage.success('添加部门成功')
+    deptForm.value.id == 1 ? ElMessage.success('修改部门成功') : ElMessage.success('添加部门成功')
     showDialog.value = false
     deptForm.value = {}
     getDept()
   } else {
-    ElMessage.error('添加部门失败')
+    deptForm.value.id == 1 ? ElMessage.success('修改部门失败') : ElMessage.error('添加部门成功')
   }
 }
 
@@ -81,7 +109,9 @@ const saveDept = async () => {
 const getDept = async () => {
   const res = await getDeptListApi()
   console.log(res);
-  tableData.value = res.data
+  if (res.code) {
+    tableData.value = res.data
+  }
 }
 
 onMounted(() => {
@@ -106,7 +136,7 @@ onMounted(() => {
     </el-table-column>
   </el-table>
 
-  <!-- 新增部门的对话框 -->
+  <!-- 对话框 -->
   <el-dialog v-model="showDialog" :title="formTitle" width="30%" @close="resetForm" draggable>
     <el-form :model="deptForm" :rules="formRules" ref="deptFormRef">
       <el-form-item label="部门名称" prop="name" label-width="80px">
