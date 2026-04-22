@@ -157,6 +157,5 @@ onMounted(() => {
   h1 {
     color: rgba(0, 0, 0, 0.527);
     font-size: 20px;
-
   }
 </style>
