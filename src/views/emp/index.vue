@@ -17,20 +17,26 @@ watch(
      if(newValue.length == 2){
       searchEmp.value.begin = newValue[0]
       searchEmp.value.end = newValue[1]
+      console.log(searchEmp.value.begin, newValue[1])
      }else {
       searchEmp.value.begin = ''
       searchEmp.value.end = ''
+      console.log(searchEmp.value.begin, newValue[1])
      }
   }
 )
 const search = async () => {
   // 处理查询逻辑
   const res = await getEmpListApi({
-    ...searchEmp.value,
-    page: currentPage.value,
+    name: searchEmp.value.name,
+    gender: searchEmp.value.gender,
+    begin: searchEmp.value.begin,
+    end: searchEmp.value.end,
+    pageNum: currentPage.value,
     pageSize: pageSize.value
   })
   empList.value = res.data.rows
+  total.value = res.data.total
   console.log('Search:', res)
 }
 
@@ -157,8 +163,8 @@ onMounted(() => {
 
   <!-- 分页 -->
   <el-pagination
-    @page-size="handleSizeChange"
-    @current-page="handleCurrentChange"
+    @size-change="handleSizeChange"
+    @current-change="handleCurrentChange"
     v-model:current-page="currentPage"
     v-model:page-size="pageSize"
     :page-sizes="[10, 20, 30, 40]"
