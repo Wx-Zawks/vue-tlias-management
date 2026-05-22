@@ -1,5 +1,21 @@
 <script setup>
-
+  import { ref, onMounted } from 'vue'
+  import { useRouter } from 'vue-router'
+  import { ElMessage } from 'element-plus'
+  const router = useRouter()
+  const loginName = ref('')
+  const logout = () => { 
+    localStorage.removeItem("TOKEN")
+    router.push('/login')
+    ElMessage.success("退出成功")
+  }
+  onMounted(() => {
+  //获取登录用户名
+  let loginUser = JSON.parse(localStorage.getItem('loginUser'))
+  if (loginUser) {
+    loginName.value = loginUser.name
+  }
+})
 </script>
 
 <template>
@@ -9,11 +25,11 @@
       <el-header class="header">
         <span class="title">Tlias智能学习辅助系统</span>
         <span class="right_tool">
-          <a href="">
+          <!-- <a href="">
             <el-icon><EditPen /></el-icon> 修改密码 &nbsp;&nbsp;&nbsp; |  &nbsp;&nbsp;&nbsp;
-          </a>
-          <a href="">
-            <el-icon><SwitchButton /></el-icon> 退出登录
+          </a> -->
+          <a @click="logout">
+            <el-icon><SwitchButton /></el-icon> 退出登录, {{ loginName }}
           </a>
         </span>
       </el-header>

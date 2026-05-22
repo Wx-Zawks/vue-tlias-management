@@ -1,8 +1,8 @@
 <script setup>
   import { onMounted, ref, watch } from 'vue'
-  import { getEmpListApi, addEmpApi } from '@/api/emp'
+  import { getEmpListApi, addEmpApi, getEmpByIdApi, updateEmpApi, deleteEmpApi } from '@/api/emp'
   import { getDeptListApi } from '@/api/dept'
-  import { ElMessage } from 'element-plus'
+  import { ElMessage, ElMessageBox } from 'element-plus'
 
 //职位列表数据
 const jobs = ref([{ name: '班主任', value: 1 },{ name: '讲师', value: 2 },{ name: '学工主管', value: 3 },{ name: '教研主管', value: 4 },{ name: '咨询师', value: 5 },{ name: '其他', value: 6 }])
@@ -102,6 +102,7 @@ const handleCurrentChange = (val) => {
 onMounted(() => {
   search()
   getDeptList()
+  getToken(); //获取token
 })
 
 //新增员工
@@ -204,16 +205,108 @@ const rules = ref({
 const saveAddedEmp = async () => {
   employeeFormRef.value.validate(async valid => {
     if(valid){ // 校验通过
-      const result = await addEmpApi(employee.value);
-      if(result.code){
-        ElMessage.success('新增员工成功')
-        dialogVisible.value = false
-        search()
-      }else {
-        ElMessage.error(result.msg)
+      if(employee.value.id) {
+        const result = await updateEmpApi(employee.value);
+        if(result.code){
+          ElMessage.success('更新员工成功')
+          dialogVisible.value = false
+          search()
+        }else {
+          ElMessage.error(result.msg)
+        }
+      } else {
+        const result = await addEmpApi(employee.value);
+        if(result.code){
+          ElMessage.success('新增员工成功')
+          dialogVisible.value = false
+          search()
+        }else {
+          ElMessage.error(result.msg)
+        }
       }
     }
   })
+}
+
+//编辑员工
+const editEmp = async (empInfo) => {
+  dialogVisible.value = true
+  dialogTitle.value = '编辑员工' 
+  console.log("前端表格中该列员工数据", empInfo)
+  const res = await getEmpByIdApi(empInfo.id)
+  console.log("根据id查询回显员工数据", res.data)
+  if (res.code) {
+    employee.value = {
+    id: res.data.id,
+    username: res.data.username,
+    name: res.data.name,
+    gender: res.data.gender,
+    phone: res.data.phone,
+    job: res.data.job,
+    salary: res.data.salary,
+    deptId: res.data.deptId,
+    entryDate: res.data.entryDate,
+    image: res.data.image,
+    exprList: res.data.exprList.map(expr => {
+      return {
+        exprDate: [expr.begin, expr.end],
+        begin: expr.begin,
+        end: expr.end,
+        company: expr.company,
+        job: expr.job,
+        empId: res.data.id
+      }
+    })
+    }
+  }
+}
+
+//删除员工
+const empTableRef = ref(null)
+const deleteEmpById = async (empId) => { 
+  ElMessageBox.confirm('您确认删除该员工吗?','提示',
+    { confirmButtonText: '确认',cancelButtonText: '取消',type: 'warning'}
+  ).then(async () => { 
+    const result = await deleteEmpApi(empId)
+    if(result.code){
+      ElMessage.success('删除员工成功')
+      search()
+    }else {
+      ElMessage.error(result.msg)
+    }
+  })
+}
+
+//批量删除
+const batchDelete = () => { 
+  const selectedRow = empTableRef.value.getSelectionRows()
+  if(selectedRow.length === 0) {
+    ElMessage.warning('请选择要删除的行')
+    return
+  }
+  const idsArr = selectedRow.map(emp => emp.id)
+  const ids = idsArr.join(',')
+  ElMessageBox.confirm('您确认删除选中的这些员工吗?','提示',
+    { confirmButtonText: '确认',cancelButtonText: '取消',type: 'warning'}
+  ).then(async () => { 
+    const result = await deleteEmpApi(ids)
+    if(result.code){
+      ElMessage.success('删除员工成功')
+      search()
+    }else {
+      ElMessage.error(result.msg)
+    }
+  })
+}
+//解决图片上传401问题
+//声明token
+const token = ref('')
+//获取token
+const getToken = () => {
+  const loginUser = JSON.parse(localStorage.getItem('loginUser'));
+  if(loginUser && loginUser.token){
+    token.value = loginUser.token;
+  }
 }
 </script>
 
@@ -249,11 +342,11 @@ const saveAddedEmp = async () => {
   </el-form>
 
     <el-button type="success" @click="addEmp"> + 新增员工</el-button>
-  <el-button type="danger" @click=""> - 批量删除</el-button>
+  <el-button type="danger" @click="batchDelete"> - 批量删除</el-button>
   <br><br>
 
 <!-- 表格 -->
-  <el-table :data="empList" border style="width: 100%">
+  <el-table ref="empTableRef" :data="empList" border style="width: 100%">
     <el-table-column type="selection" width="55" align="center"></el-table-column>
     <el-table-column prop="name" label="姓名" width="120" align="center"></el-table-column>
     <el-table-column label="性别" width="170" align="center">
@@ -282,8 +375,8 @@ const saveAddedEmp = async () => {
     <el-table-column prop="updateTime" label="最后操作时间" width="210" align="center"></el-table-column>
     <el-table-column label="操作" fixed="right" align="center">
       <template #default="scope">
-        <el-button size="small" type="success" @click="">编辑</el-button>
-        <el-button size="small" type="danger" @click="">删除</el-button>
+        <el-button size="small" type="success" @click="editEmp(scope.row)">编辑</el-button>
+        <el-button size="small" type="danger" @click="deleteEmpById(scope.row.id)">删除</el-button>
       </template>
     </el-table-column>
   </el-table>
@@ -386,6 +479,7 @@ const saveAddedEmp = async () => {
               <el-upload
                 class="avatar-uploader"
                 action="/api/upload"
+                :headers="{'token': token}"
                 :show-file-list="false"
                 :on-success="handleAvatarSuccess"
                 :before-upload="beforeAvatarUpload"
