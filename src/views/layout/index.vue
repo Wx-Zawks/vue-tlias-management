@@ -10,6 +10,11 @@
     ElMessage.success("退出成功")
   }
   onMounted(() => {
+  //判断是否携带登录token
+  if (!localStorage.getItem('TOKEN')) {
+    router.push('/login')
+    ElMessage.success("请先登录")
+  }
   //获取登录用户名
   let loginUser = JSON.parse(localStorage.getItem('loginUser'))
   if (loginUser) {
